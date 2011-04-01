@@ -1,4 +1,19 @@
 GIT
+  remote: git://github.com/BDQ/deface.git
+  revision: 4fea141d756c96b1db5eea3eb3fe834e20bd9db1
+  specs:
+    deface (0.2.0)
+      nokogiri (~> 1.4.3)
+      rails (~> 3.0.0)
+
+GIT
+  remote: git://github.com/BDQ/deface_editor.git
+  revision: c45cadb4f1be43438ebf3d075646c10398ef8c12
+  specs:
+    deface_editor (0.2.0)
+      deface (= 0.2.0)
+
+GIT
   remote: git://github.com/divineforest/spree_editor.git
   revision: e2be06b1f7c2ca736c1078679267cc69b647f46d
   specs:
@@ -98,19 +113,6 @@ GIT
   specs:
     spree_wishlist (0.30.0.beta2)
       spree_core (>= 0.30.1)
-
-PATH
-  remote: ../deface
-  specs:
-    deface (0.2.0)
-      nokogiri (~> 1.4.3)
-      rails (~> 3.0.0)
-
-PATH
-  remote: ../deface_editor
-  specs:
-    deface_editor (0.2.0)
-      deface (= 0.2.0)
 
 GEM
   remote: http://rubygems.org/
