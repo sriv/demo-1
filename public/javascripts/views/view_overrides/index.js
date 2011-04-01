@@ -1,5 +1,13 @@
-var index = (<r><![CDATA[<ul class="buttons small">
-    <li class="last disabled" id="hide"><a rel="hide" href="#">_</a></li>
+var index = (<r><![CDATA[<ul class="buttons small toggle">
+    <li class="first <%= (App.editor.maximised || App.editor.visible) ? '' : 'disabled' %>" id="min">
+      <a rel="min" href="#">_</a>
+    </li>
+    <li class="<%= App.editor.maximised ? '' : 'disabled' %>" id="restore">
+      <a rel="restore" href="#">-</a>
+    </li>
+    <li class="last <%= (!App.editor.maximised && App.editor.visible) ? '' : 'disabled' %>" id="max">
+      <a rel="max" href="#">&oline;</a>
+    </li>
   </ul>
   <div id="load_override">
     <select id="all_view_overrides">
@@ -16,71 +24,113 @@ var index = (<r><![CDATA[<ul class="buttons small">
 
   <ul class="buttons small toggle">
     <li class="first"><a rel="zoom-in" href="#">+</a></li>
+    <li class="big"><a rel="toggle" href="#">Toggle</a></li>
     <li class="last"><a rel="zoom-out" href="#">-</a></li>
   </ul>
 
-  <ul class="buttons toggle" style="display:none;">
-    <li class="first active"><a rel="html" href="#">HTML</a></li>
-    <li><a rel="css" href="#">CSS</a></li>
-    <li class="last"><a rel="layout" href="#">Layout</a></li>
+  <ul class="buttons toggle">
+    <li class="first_last"><a rel="refresh" href="#">Refresh</a></li>
+  </ul>
+
+  <ul id="current" class="buttons toggle">
+    <li id='html' class="first <%= App.current == 'html' ? 'active' : '' %>"><a rel="html" href="#">HTML</a></li>
+    <li id='css' class="last <%= App.current == 'css' ? 'active' : '' %>"><a rel="css" href="/deface#stylesheets/application">CSS</a></li>
   </ul> ]]></r>).toString();
 
 
 App.Views.ViewOverrides.Index = Backbone.View.extend({
-    last_editor_height: 50,
+  events: {
+    "click a[rel='navigate']": "navigate",
+    "click a[rel='min']": "minimise",
+    "click a[rel='restore']": "restore",
+    "click a[rel='max']": "maximise",
+    "click a[rel='zoom-in']": "zoom_in",
+    "click a[rel='zoom-out']": "zoom_out",
+    "click a[rel='toggle']": "toggle",
+    "click a[rel='refresh']": "refresh",
+    "click a[rel='load']": "show_load"
+  },
 
-    events: {
-      "click a[rel='navigate']": "navigate",
-      "click a[rel='hide']": "hide",
-      "click a[rel='zoom-in']": "zoom_in",
-      "click a[rel='zoom-out']": "zoom_out",
-      "click a[rel='load']": "show_load"
-    },
+  initialize: function() {
+    this.render();
+  },
 
-    initialize: function() {
-      this.render();
-    },
+  minimise: function() {
+    if(App.editor.visible){
+      App.editor.maximised = false;
+      App.editor.minimised = true;
+      App.animate_resize();
+    }
+    return false;
+  },
 
-    hide: function() {
-      this.last_editor_height = $("div#deface_editor").height();
-      animate_resize(50);
-      return false;
-    },
+  restore: function() {
+    if(App.editor.visible){
+      App.editor.maximised = false;
+      App.editor.minimised = false;
 
-    show_load: function() {
-      if($("a[rel='load']").parent().hasClass('disabled')){
-        return false;
-      }
+      App.animate_resize();
+    }
 
-      $("div#deface_editor #load_override").fadeIn();
-      return false;
-    },
+    return false;
+  },
 
-    render: function() {
-      var compiled = _.template(index);
+  maximise: function() {
+    if(App.editor.visible){
+      App.editor.maximised = true;
+      App.editor.minimised = false;
 
-      $(this.el).html(compiled({ collection : App.view_overrides }));
-      $('#nav').html(this.el);
+      App.animate_resize();
+    }
 
-      new App.Views.ViewOverrides.List({ collection: App.view_overrides});
+    return false;
+  },
 
-      $('iframe').height($(window).height() - 50);
-    },
-
-    zoom_in: function() {
-      frames[0].hook_zoom('in');
-      return false;
-    },
-
-    zoom_out: function() {
-      frames[0].hook_zoom('out');
-      return false;
-    },
-
-    navigate: function() {
-      new App.Views.Shared.navigate();
+  show_load: function() {
+    if($("a[rel='load']").parent().hasClass('disabled')){
       return false;
     }
+
+    $("div#deface_editor #load_override").fadeIn();
+    return false;
+  },
+
+  render: function() {
+    var compiled = _.template(index);
+
+    $(this.el).html(compiled({ collection : App.view_overrides }));
+    $('#nav').html(this.el);
+
+    new App.Views.ViewOverrides.List({ collection: App.view_overrides});
+
+    $('iframe').height($(window).height() - 50);
+  },
+
+  zoom_in: function() {
+    frames[0].hook_zoom('in');
+    return false;
+  },
+
+  zoom_out: function() {
+    frames[0].hook_zoom('out');
+    return false;
+  },
+
+  toggle: function() {
+    frames[0].show_frames = !frames[0].show_frames;
+    frames[0].show_hook_frames();
+    return false;
+  },
+
+  refresh: function() {
+    frames[0].location.href = frames[0].location.href;
+    return false;
+  },
+
+  navigate: function() {
+    new App.Views.Shared.navigate();
+    return false;
+  }
 
 
 });

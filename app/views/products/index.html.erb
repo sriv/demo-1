@@ -2,7 +2,9 @@
 
 <%= render 'shared/product_banner' %>
 
-<%= breadcrumbs(:taxon => @taxon, :product => @product, :product_group => @product_group) %>
+<div data-hook="breadcrumbs" data-layer="2">
+  <%= breadcrumbs(:taxon => @taxon, :product => @product, :product_group => @product_group) %>
+</div>
 
 <% content_for :sidebar do %>
   <%= render 'shared/all_products' %>
@@ -12,18 +14,18 @@
 <% if params[:keywords] %>
 
   <% if @products.empty? %>
-    <div data-hook="no-products" data-layer="1">
+    <div data-hook="no-products" data-layer="2">
       <%= t(:no_products_found) %>
     </div>
   <% else %>
-    <div data-hook="search_products" data-layer="1">
+    <div data-hook="search_products" data-layer="2">
       <%= render "shared/products", :products => @products, :taxon => @taxon %>
     </div>
   <% end %>
 
 <% else %>
 
-  <div data-hook="browse_products" data-layer="1">
+  <div data-hook="browse_products" data-layer="2">
     <%= render "shared/products", :products => @products, :taxon => @taxon %>
   </div>
 

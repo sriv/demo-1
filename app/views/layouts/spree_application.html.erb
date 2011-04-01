@@ -33,7 +33,7 @@
       <%= form_tag products_url, :method => :get do %>
         <input type="search" id="s1" name="keywords" placeholder="Search Railsdog Radio">
       <% end %>
-      <nav>
+      <nav data-hook="nav" data-layer="2">
         <%= link_to "products", products_path %>
         <a href="/help">help</a>
         <% if current_user %>
@@ -52,7 +52,7 @@
       </div>
     <% end %>
 
-    <div id="main" role="main" data-layer="main" data-layer="1">
+    <div id="main" role="main" data-hook="main" data-layer="1">
       <% if flash.notice %>
         <div class="flash notice"><%= flash.notice %></div>
       <% end %>

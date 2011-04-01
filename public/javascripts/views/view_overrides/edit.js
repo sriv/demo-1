@@ -1,4 +1,4 @@
-var edit = (<r><![CDATA[<form id="view_override_form">
+var viewoverride_edit = (<r><![CDATA[<form id="view_override_form">
     <div>
       <div class="fields">
         <label>Name:</label>
@@ -52,7 +52,7 @@ var edit = (<r><![CDATA[<form id="view_override_form">
           <div class="fields">
             <label>Text:</label>
           </div>
-          <pre id="view_override_replace_text"><p>I'm a p</p></pre>
+          <pre id="view_override_replace_text" class="small_editor"><p>I'm a p</p></pre>
         </div>
 
         <div style="display: none;" class="fields replacement" id="replace_with_partial">
@@ -67,13 +67,14 @@ var edit = (<r><![CDATA[<form id="view_override_form">
       </div>
 
       <div id="actions">
-        <ul class="buttons top">
-          <li class="last"><a rel="advanced" href="#">Advanced</a></li>
+        <ul class="buttons toggle">
+          <li class="<%= typeof(id)  == "undefined" ? 'disabled' : '' %>"><a rel="delete" href="#">Delete</a></li>
+          <li><a rel="cancel" href="#">Cancel</a></li>
+          <li class="last"><a rel="save" href="#">Save</a></li>
         </ul>
 
-        <ul class="buttons bottom">
-          <li class="last"><a rel="delete" href="#">Delete</a></li>
-          <li class="last"><a rel="save" href="#">Save</a></li>
+        <ul class="buttons ">
+          <li class="last"><a rel="advanced" href="#">Advanced</a></li>
         </ul>
 
       </div>
@@ -84,75 +85,151 @@ App.Views.ViewOverrides.Edit = Backbone.View.extend({
   show_form: false,
   show_text_editor: false,
   show_advanced: false,
+  code_editor: null,
 
   events: {
     "click a[rel='save']": "save",
+    "click a[rel='cancel']": "cancel",
     "click a[rel='delete']": "delete",
     "click a[rel='advanced']": "advanced",
+    "change select[name='replace_with']": "set_replacement",
+    "change select[name='target']": "set_target"
   },
 
   initialize: function() {
     $(this.el).data('view', this);
+    this.show_form = true;
     this.model = this.options.model;
     this.render();
   },
 
   save: function() {
+    App.clear_errors();
+
     attrs = $('form#view_override_form').serializeObject();
-    attrs.replace_text = editor.getSession().getValue();
+    attrs.replace_text = this.code_editor.getSession().getValue();
 
     var isNew = this.model.isNew();
+
+    App.increment_activity();
 
     this.model.save(attrs, {
       success: function(model, resp) {
         window.frames[0].location.reload();
 
-
-        if(App.view_overrides.get(1)!=undefined){
-          App.view_overrides.remove(App.view_overrides.get(1), {silent: true});
+        if(App.view_overrides.get(model.get('id'))!=undefined){
+          App.view_overrides.remove(App.view_overrides.get(model.get('id')), {silent: true});
         }
 
         App.view_overrides.add(model);
+
+        $("a[rel='delete']").parent().removeClass('disabled');
       },
-      error: function() {
-        console.log('error');
-      }
+      error: App.handle_save_error
     });
 
     return false;
   },
 
   delete: function() {
-    console.log('delete');
+    this.model.destroy();
+    App.view_overrides.remove(this.model);
+
+    App.reset_editor();
+    return false;
+  },
+
+  cancel: function() {
+    App.reset_editor();
+    return false;
   },
 
   advanced: function() {
-    this.show_advanced = !this.show_advanced;
-    this.resize_editor();
+    this.show_advanced = !this.show_advanced ;
+    App.animate_resize();
     $('#view_override_form .advanced').toggle();
+    return false;
   },
 
-  resize_editor: function() {
-    var height = 50;
+  calculate_size: function() {
+    var height = 0;
 
-    if(this.show_form){
-      height += 50
+    if(App.editor.maximised){
+      if(this.code_editor!=null){
+        $(this.code_editor.container).height($(window).height() - 170);
+        this.code_editor.resize();
+      }
+
+      height = ($(window).height() - 50);
+
+    }else if(App.editor.minimised){
+      //leave it at default 0
+    }else{
+
+      if(this.show_form){
+        //height += 50;
+
+        if(this.show_text_editor){
+          if(this.code_editor!=null){
+            $(this.code_editor.container).height(170);
+            this.code_editor.resize();
+
+            height += 300;
+          }
+        }else{
+          height += 80;
+        }
+
+        if(this.show_advanced){
+          height += 30;
+        }
+      }
     }
 
-    if(this.show_text_editor){
-      height += 280
+    return height;
+  },
+
+  set_replacement: function() {
+    var replacement = $("select[name='replace_with']").val();
+
+    $('div#replace_withs > div').hide();
+    $('div#replace_with_' + replacement).show();
+
+    this.show_text_editor = (replacement=='text');
+    App.animate_resize();
+  },
+
+  set_target: function(){
+    var target = $("select[name='target']").val();
+
+    if(target=='remove'){
+      this.show_text_editor = false;
+
+      $('#closing_selector_wrapper').hide();
+      $('div#replace_withs').hide();
+    }else{
+      var replacement = $("select[name='replace_with']").val();
+      if(replacement=='text'){
+        this.show_text_editor = true;
+      }
+
+      if(this.show_advanced){
+        $('#closing_selector_wrapper').show();
+      }
+
+      $('div#replace_withs').show();
     }
 
-    if(this.show_advanced){
-      height += 30
-    }
-
-    animate_resize(height);
+    App.animate_resize();
 
   },
 
   render: function() {
-    var compiled = _.template(edit);
+    App.editor.minimised = false;
+    App.editor.visible = true;
+    App.view = this;
+
+    var compiled = _.template(viewoverride_edit);
 
     if(this.model.get('hook')!=undefined){
       hook_name = this.model.get('hook');
@@ -167,35 +244,42 @@ App.Views.ViewOverrides.Edit = Backbone.View.extend({
 
       this.model.set( {virtual_path: template.get('name'), replacement: hook.source } );
 
-
-      //todo finih this unset to remove hook attr
+      //todo finish this unset to remove hook attr
       this.model.unset('hook')
     }
-
 
     $(this.el).html(compiled(this.model.toJSON()));
     $('#main').html(this.el);
 
     if(this.model.get('replace_with')=="text"){
-      editor = ace.edit("view_override_replace_text");
-      editor.setTheme("ace/theme/twilight");
+      this.show_text_editor = true;
+      var editor_height = 170;
 
-      var html_mode = require("ace/mode/html").Mode;
-      editor.getSession().setMode(new html_mode());
-      if(this.model.get('replacement')!=null){
-        editor.getSession().setValue(this.model.get('replacement'));
+      if(App.editor.maximised){
+        editor_height = $(window).height() - 170;
       }
 
-      this.show_text_editor = true;
+      $("#view_override_replace_text").height(editor_height);
+      this.code_editor = ace.edit("view_override_replace_text");
+
+      this.code_editor.setTheme("ace/theme/twilight");
+
+      var html_mode = require("ace/mode/html").Mode;
+      this.code_editor.getSession().setMode(new html_mode());
+      if(this.model.get('replacement')!=null){
+        this.code_editor.getSession().setValue(this.model.get('replacement'));
+      }
 
     }else if(this.model.get('target')=="partial"){
-      this.show_text_editor = false;
+      this.code_editor = null;
       $("#view_override_replace_parital").val(this.model.get('replacement'));
     }else if(this.model.get('target')=="template"){
-      this.show_text_editor = false;
+      this.code_editor = null;
       $("#view_override_replace_template").val(this.model.get('replacement'));
     }
 
-    this.resize_editor();
+    App.animate_resize();
+
+    return this;
   }
 });

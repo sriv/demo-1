@@ -1,5 +1,5 @@
-<div data-hook="product_banner" data-layer="1">
-  <% content_for :banner do %>
+<% content_for :banner do %>
+  <div data-hook="product_banner" data-layer="2">
     <% if @taxon.present? %>
       <h1><%= raw @taxon.name %></h1>
       <%= image_tag 'dogradio/taxon/satellite-radios-bg.jpg' %>
@@ -12,5 +12,5 @@
       <h1>Products</h1>
       <%= image_tag 'dogradio/taxon/satellite-radios-bg.jpg' %>
     <% end %>
-  <% end %>
-</div>
+  </div>
+<% end %>

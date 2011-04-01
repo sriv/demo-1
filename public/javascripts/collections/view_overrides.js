@@ -1,5 +1,4 @@
 App.Collections.ViewOverrides = Backbone.Collection.extend({
   model: ViewOverride,
-  url: '/view_overrides'
+  url: '/deface/themes/' + App.theme_id + '/view_overrides'
 });
-
