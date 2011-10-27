@@ -3,7 +3,7 @@ source 'http://rubygems.org'
 # Bundle edge Rails instead:
 # gem 'rails', :git => 'git://github.com/rails/rails.git'
 
-gem 'rails', '3.1.1'
+gem 'rails', '3.1.0'
 
 gem 'aws-s3'
 gem 'hoptoad_notifier'
@@ -28,9 +28,9 @@ gem 'spree_rdr_theme', :git => 'git://github.com/spree/spree_rdr_theme.git'
 gem 'capistrano'
 
 group :assets do
-  gem 'sass-rails',   '~> 3.1.4'
-  gem 'coffee-rails', '~> 3.1.1'
-  gem 'uglifier', '>= 1.0.3'
+  gem 'sass-rails', "~> 3.1.0"
+  gem 'coffee-rails', "~> 3.1.0"
+  gem 'uglifier'
 end
 
 group :development, :test do
@@ -53,3 +53,4 @@ group :production do
 end
 
 gem 'deface', :git => 'git://github.com/railsdog/deface.git'
+
